@@ -7,7 +7,6 @@ swiggy_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
 }
 
-
 def process_external_swiggy_search(lat, long, query):
     SWIGGY_SEARCH_URL = f"https://www.swiggy.com/dapi/restaurants/search/v3?lat={lat}&lng={long}&str={query}&submitAction=ENTER"
     response = requests.get(SWIGGY_SEARCH_URL, headers=swiggy_headers)
@@ -82,6 +81,42 @@ def swiggy_search():
     long = 77.7481552
     query = "paradise"
     suggested_restaurants = process_external_swiggy_search(lat, long, query)
+    return suggested_restaurants
+
+
+def process_external_zomato_location(lat, long):
+    ZOMATO_LOCATION_URL = f"https://www.zomato.com/webroutes/location/get?lat={lat}&lon={long}&entity_id=0&entity_type=&userDefinedLatitude=0&userDefinedLongitude=0&placeId=0&placeType=&placeName=&cellId=0&addressId=0&isOrderLocation=0&forceEntityName=&res_id=0&pageType=city&persist=true"
+    response = requests.get(ZOMATO_LOCATION_URL, headers=swiggy_headers)
+    if response.status_code != 200:
+        return []
+    return response.json()["locationDetails"]
+
+
+def process_external_zomato_search(params):
+    ZOMATO_SEARCH_URL = f"https://www.zomato.com/webroutes/search/autoSuggest"
+    response = requests.get(ZOMATO_SEARCH_URL, headers=swiggy_headers, params=params)
+    if response.status_code != 200:
+        return []
+    response = response.json()
+    if 'results' not in response:
+        return []
+    restaurants = []
+    results = response['results']
+    for entity in results:
+        if entity['entityType'] == "restaurant":
+            restaurants.append(entity["info"]["name"])
+    return restaurants
+
+
+@app.route('/zomato-search', methods=['GET'])
+def zomato_search():
+    lat = 12.984048
+    long = 77.7481552
+    query = "paradise"
+    params = process_external_zomato_location(lat, long)
+    params["q"] = query
+    suggested_restaurants = process_external_zomato_search(params)
+    # print(suggested_restaurants)
     return suggested_restaurants
 
 
