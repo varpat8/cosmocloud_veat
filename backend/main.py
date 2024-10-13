@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 import requests
 from flask_cors import CORS
 
@@ -112,11 +112,12 @@ def process_external_zomato_search(params):
     return restaurants
 
 
-@app.route('/zomato-search', methods=['GET'])
+@app.route('/zomato-search', methods=['POST'])
 def zomato_search():
-    lat = 12.984048
-    long = 77.7481552
-    query = "paradise"
+    data = request.json
+    query = data.get("query")
+    lat = data.get("lat")
+    long = data.get("long")
     params = process_external_zomato_location(lat, long)
     params["q"] = query
     suggested_restaurants = process_external_zomato_search(params)
